@@ -88,13 +88,13 @@ func (in *DiscoveryRuleList) DeepCopyObject() runtime.Object {
 func (in *DiscoveryRuleSpec) DeepCopyInto(out *DiscoveryRuleSpec) {
 	*out = *in
 	out.Period = in.Period
-	if in.IPrange != nil {
-		in, out := &in.IPrange, &out.IPrange
+	if in.IPranges != nil {
+		in, out := &in.IPranges, &out.IPranges
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Exclude != nil {
-		in, out := &in.Exclude, &out.Exclude
+	if in.Excludes != nil {
+		in, out := &in.Excludes, &out.Excludes
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

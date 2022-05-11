@@ -1,30 +1,21 @@
 package ip_range
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
-	"strings"
+	"sort"
 	"time"
 
 	"github.com/go-ping/ping"
 	gapi "github.com/karimra/gnmic/api"
-	"github.com/karimra/gnmic/target"
-	"github.com/openconfig/ygot/ygot"
 	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
-	"github.com/yndd/discovery-operator/discovery/discoverers"
 	discoveryrules "github.com/yndd/discovery-operator/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -75,29 +66,21 @@ func (i *ipRangeDR) SetClient(c client.Client) {
 
 //
 func (i *ipRangeDR) run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule) error {
-	hosts, err := getHosts(dr.Spec.IPrange...)
+	hosts, err := getHosts(dr.Spec.IPranges...)
 	if err != nil {
 		return err
 	}
-	ips := make([]string, 0, len(hosts))
-	excludedHosts := make(map[string]struct{}, len(hosts))
-	for _, e := range dr.Spec.Exclude {
-		eh, err := getHosts(e)
+	for _, e := range dr.Spec.Excludes {
+		excludes, err := getHosts(e)
 		if err != nil {
 			return err
 		}
-		for _, h := range eh {
-			excludedHosts[h] = struct{}{}
+		for h := range excludes {
+			delete(hosts, h)
 		}
-	}
-	for _, h := range hosts {
-		if _, ok := excludedHosts[h]; ok {
-			continue
-		}
-		ips = append(ips, h)
 	}
 	//
-	for _, ip := range ips {
+	for _, ip := range sortIPs(hosts) {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -126,8 +109,8 @@ func incIP(ip net.IP) {
 	}
 }
 
-func getHosts(cidrs ...string) ([]string, error) {
-	ips := make([]string, 0)
+func getHosts(cidrs ...string) (map[string]struct{}, error) {
+	ips := make(map[string]struct{})
 	for _, cidr := range cidrs {
 		ip, ipnet, err := net.ParseCIDR(cidr)
 		if err != nil {
@@ -135,7 +118,7 @@ func getHosts(cidrs ...string) ([]string, error) {
 		}
 
 		for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incIP(ip) {
-			ips = append(ips, ip.String())
+			ips[ip.String()] = struct{}{}
 		}
 	}
 	return ips, nil
@@ -150,6 +133,8 @@ func pingIP(ip string) error {
 
 func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule, ip string) error {
 	switch dr.Spec.Protocol {
+	case "snmp":
+		return nil
 	case "netconf":
 		return nil
 	default: // gnmi
@@ -165,6 +150,7 @@ func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.Discover
 			gapi.Address(fmt.Sprintf("%s:%d", ip, dr.Spec.Port)),
 			gapi.Username(string(creds.Data["username"])),
 			gapi.Password(string(creds.Data["password"])),
+			gapi.Timeout(5 * time.Second),
 		}
 		if dr.Spec.Insecure {
 			tOpts = append(tOpts, gapi.Insecure(true))
@@ -187,105 +173,34 @@ func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.Discover
 		if err != nil {
 			return err
 		}
-		var discoverer discoverers.Discoverer
-	OUTER:
-		for _, m := range capRsp.SupportedModels {
-			switch m.Organization {
-			case "Nokia":
-				if strings.Contains(m.Name, "srl_nokia") {
-					// SRL
-					init := discoverers.Discoverers[discoverers.NokiaSRLDiscovererName]
-					discoverer = init()
-				} else {
-					// SROS
-					init := discoverers.Discoverers[discoverers.NokiaSROSDiscovererName]
-					discoverer = init()
-				}
-				break OUTER
-			}
-		}
-		if discoverer == nil {
-			return errors.New("unknown target vendor")
+		discoverer, err := discoveryrules.GetDiscovererGNMI(capRsp)
+		if err != nil {
+			return err
 		}
 		di, err := discoverer.Discover(ctx, dr, t)
 		if err != nil {
 			return err
 		}
-		return i.applyTarget(ctx, dr, di, t)
+		b, _ := json.Marshal(di)
+		i.logger.Info("discovery info", "info", string(b))
+		return discoveryrules.ApplyTarget(ctx, i.client, dr, di, t)
 	}
 }
 
-func (i *ipRangeDR) applyTarget(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule, di *targetv1.DiscoveryInfo, t *target.Target) error {
-	b, _ := json.Marshal(di)
-	i.logger.Info("discovery info", "info", string(b))
-	namespace := dr.Spec.TargetNamespace
-	if namespace == "" {
-		namespace = dr.GetNamespace()
-	}
-	targetName := fmt.Sprintf("%s.%s.%s.%s", dr.GetName(), *di.HostName, strings.Fields(*di.SerialNumber)[0], *di.MacAddress)
-	targetName = strings.ReplaceAll(targetName, ":", "-")
-	targetName = strings.ToLower(targetName)
-	nddTarget := &ygotnddtarget.NddTarget_TargetEntry{
-		AdminState: ygotnddtarget.NddCommon_AdminState_enable,
-		Config: &ygotnddtarget.NddTarget_TargetEntry_Config{
-			Address:        &t.Config.Address,
-			CredentialName: pointer.String(dr.Spec.Credentials),
-			Encoding:       ygotnddtarget.NddTarget_Encoding_ASCII,
-			Insecure:       pointer.Bool(false),
-			Protocol:       ygotnddtarget.NddTarget_Protocol_gnmi,
-			// Proxy:          new(string),
-			SkipVerify: pointer.Bool(true),
-			// TlsCredentialName: new(string),
-		},
-		Description: pointer.String(fmt.Sprintf("discovered by rule %s", dr.GetName())),
-		Name:        pointer.String(targetName),
-		VendorType:  ygotnddtarget.NddTarget_VendorType_nokia_srl,
+func sortIPs(hosts map[string]struct{}) []string {
+	realIPs := make([]net.IP, 0, len(hosts))
+
+	for ip := range hosts {
+		realIPs = append(realIPs, net.ParseIP(ip))
 	}
 
-	//
-	j, err := ygot.EmitJSON(nddTarget, &ygot.EmitJSONConfig{
-		Format:         ygot.RFC7951,
-		SkipValidation: true,
+	sort.Slice(realIPs, func(i, j int) bool {
+		return bytes.Compare(realIPs[i], realIPs[j]) < 0
 	})
-	if err != nil {
-		return err
-	}
 
-	// check if the target already exists
-	targetCR := &targetv1.Target{}
-	err = i.client.Get(ctx, types.NamespacedName{
-		Namespace: namespace,
-		Name:      targetName,
-	}, targetCR)
-	if err != nil {
-		if kerrors.IsNotFound(err) {
-			targetCR = &targetv1.Target{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      targetName,
-					Namespace: namespace,
-					Labels:    map[string]string{},
-					Annotations: map[string]string{
-						"yndd.io/discovery-rule": dr.GetName(),
-						"yndd.io/mgmt-address":   t.Config.Address,
-					},
-				},
-				Spec: targetv1.TargetSpec{
-					Properties: runtime.RawExtension{Raw: []byte(j)},
-				},
-			}
-			err = i.client.Create(ctx, targetCR)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
+	ips := make([]string, 0, len(realIPs))
+	for _, rip := range realIPs {
+		ips = append(ips, rip.String())
 	}
-	// target already exists
-	targetCR.Status = targetv1.TargetStatus{
-		Status: targetv1.Status{
-			DiscoveryInfo: di,
-		},
-	}
-	return i.client.Status().Update(ctx, targetCR)
+	return ips
 }

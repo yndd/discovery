@@ -11,7 +11,7 @@ spec:
   protocol: gnmi
   credentials: dr1-credentials
   # ip-range
-  ip-range: 
+  ip-ranges: 
     - 172.100.100.4/32
     - 172.100.100.5/32
 

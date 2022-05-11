@@ -48,7 +48,7 @@ spec:
               enabled:
                 description: enables the discovery rule
                 type: boolean
-              exclude:
+              excludes:
                 description: IP CIDR(s) to be excluded
                 items:
                   type: string
@@ -60,7 +60,7 @@ spec:
               insecure:
                 description: Insecure connection
                 type: boolean
-              ip-range:
+              ip-ranges:
                 description: IPRange Type IP CIDR(s) to be scanned
                 items:
                   type: string

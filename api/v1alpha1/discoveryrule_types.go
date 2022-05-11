@@ -50,9 +50,9 @@ type DiscoveryRuleSpec struct {
 
 	// IPRange Type
 	// IP CIDR(s) to be scanned
-	IPrange []string `json:"ip-range,omitempty"`
+	IPranges []string `json:"ip-ranges,omitempty"`
 	// IP CIDR(s) to be excluded
-	Exclude []string `json:"exclude,omitempty"`
+	Excludes []string `json:"excludes,omitempty"`
 
 	// API Type
 	URL               string            `json:"url,omitempty"`
