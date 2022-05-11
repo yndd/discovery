@@ -1,0 +1,6 @@
+apiVersion: discovery.yndd.io/v1alpha1
+kind: DiscoveryRule
+metadata:
+  name: discoveryrule-sample
+spec:
+  # TODO(user): Add fields here

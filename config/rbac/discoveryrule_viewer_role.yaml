@@ -1,0 +1,20 @@
+# permissions for end users to view discoveryrules.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: discoveryrule-viewer-role
+rules:
+- apiGroups:
+  - discovery.yndd.io
+  resources:
+  - discoveryrules
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - discovery.yndd.io
+  resources:
+  - discoveryrules/status
+  verbs:
+  - get
