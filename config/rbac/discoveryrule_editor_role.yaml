@@ -1,0 +1,24 @@
+# permissions for end users to edit discoveryrules.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: discoveryrule-editor-role
+rules:
+- apiGroups:
+  - discovery.yndd.io
+  resources:
+  - discoveryrules
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - discovery.yndd.io
+  resources:
+  - discoveryrules/status
+  verbs:
+  - get
