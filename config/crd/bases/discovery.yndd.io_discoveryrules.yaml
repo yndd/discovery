@@ -48,11 +48,6 @@ spec:
               enabled:
                 description: enables the discovery rule
                 type: boolean
-              excludes:
-                description: IP CIDR(s) to be excluded
-                items:
-                  type: string
-                type: array
               headers:
                 additionalProperties:
                   type: string
@@ -60,11 +55,18 @@ spec:
               insecure:
                 description: Insecure connection
                 type: boolean
-              ip-ranges:
-                description: IPRange Type IP CIDR(s) to be scanned
-                items:
-                  type: string
-                type: array
+              ip-range:
+                properties:
+                  cidrs:
+                    items:
+                      type: string
+                    type: array
+                  excludes:
+                    description: IP CIDR(s) to be excluded
+                    items:
+                      type: string
+                    type: array
+                type: object
               method:
                 type: string
               oauth:
@@ -73,7 +75,9 @@ spec:
                 type: string
               period:
                 default: 1m
-                description: wait period between discovery rule runs
+                description: 'discovery rule type: ip-range, rest api, netbox, consul,...
+                  Type string `json:"type,omitempty"` wait period between discovery
+                  rule runs'
                 type: string
               port:
                 default: 57400
@@ -93,9 +97,6 @@ spec:
                 type: string
               topology-namespace:
                 description: TopoWatch Type
-                type: string
-              type:
-                description: 'discovery rule type: ip-range, rest api, netbox, consul,...'
                 type: string
               url:
                 description: API Type

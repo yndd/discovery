@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -88,7 +89,9 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-	c := controllers.NewReconciler()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := controllers.NewReconciler(ctx)
 	c.Client = mgr.GetClient()
 	c.Scheme = mgr.GetScheme()
 	c.Logger = logging.NewLogrLogger(logger)

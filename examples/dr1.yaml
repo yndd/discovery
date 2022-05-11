@@ -4,16 +4,16 @@ metadata:
   name: dr1
   namespace: ndd-system
 spec:
-  type: ip-range
   period: 1m
   enabled: true
   protocol: gnmi
   credentials: dr1-credentials
   # ip-range
-  ip-ranges: 
-    - 172.20.20.0/24
-  excludes:
-    - 172.20.20.0/32
-    - 172.20.20.1/32
-    - 172.20.20.255/32
+  ip-range:
+    cidrs: 
+      - 172.20.20.0/24
+    excludes:
+      - 172.20.20.0/32
+      - 172.20.20.1/32
+      - 172.20.20.255/32
 

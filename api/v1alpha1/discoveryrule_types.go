@@ -21,38 +21,38 @@ import (
 )
 
 // DiscoveryRuleSpec defines the desired state of DiscoveryRule
+//+kubebuilder:subresource:ip-range
 type DiscoveryRuleSpec struct {
-	// discovery rule type: ip-range, rest api, netbox, consul,...
-	Type string `json:"type,omitempty"`
+	// enables the discovery rule
+	Enabled bool `json:"enabled,omitempty"`
+
 	// wait period between discovery rule runs
 	// +kubebuilder:default:="1m"
 	Period metav1.Duration `json:"period,omitempty"`
-	// enables the discovery rule
-	Enabled bool `json:"enabled,omitempty"`
-	// type specific fields
-	// Properties runtime.RawExtension `json:"properties,omitempty"`
+
 	// gNMI, netconf
 	Protocol string `json:"protocol,omitempty"`
+
 	// Port is the gNMI port number
 	// +kubebuilder:default:=57400
 	Port uint `json:"port,omitempty"`
 
-	// secret name
+	// credentials used to access the target, a secret name
 	Credentials string `json:"credentials,omitempty"`
+
 	// Insecure connection
 	Insecure bool `json:"insecure,omitempty"`
+
 	// certificate Name
 	Certificate string `json:"certificate,omitempty"`
+
 	// target namespace
 	TargetNamespace string `json:"target-namespace,omitempty"`
+
 	// target name template
 	TargetNameTemplate string `json:"target-name-template,omitempty"`
 
-	// IPRange Type
-	// IP CIDR(s) to be scanned
-	IPranges []string `json:"ip-ranges,omitempty"`
-	// IP CIDR(s) to be excluded
-	Excludes []string `json:"excludes,omitempty"`
+	IPRange *IPRangeRule `json:"ip-range,omitempty"`
 
 	// API Type
 	URL               string            `json:"url,omitempty"`
@@ -70,6 +70,12 @@ type DiscoveryRuleSpec struct {
 	// NetBox Type
 
 	// Consul Type
+}
+
+type IPRangeRule struct {
+	CIDRs []string `json:"cidrs,omitempty"`
+	// IP CIDR(s) to be excluded
+	Excludes []string `json:"excludes,omitempty"`
 }
 
 // DiscoveryRuleStatus defines the observed state of DiscoveryRule

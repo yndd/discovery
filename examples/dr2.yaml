@@ -4,15 +4,15 @@ metadata:
   name: dr2
   namespace: ndd-system
 spec:
-  type: ip-range
   period: 1m
   enabled: true
   insecure: true
   protocol: gnmi
   credentials: dr1-credentials
   # ip-range
-  ip-ranges: 
-    - 172.100.100.4/32
-    - 172.100.100.5/32
+  ip-range: 
+    cidrs:
+      - 172.100.100.4/32
+      - 172.100.100.5/32
 
 

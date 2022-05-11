@@ -152,3 +152,14 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 	}
 	return c.Status().Update(ctx, targetCR)
 }
+
+func Initialize(dr *discoveryv1alpha1.DiscoveryRule) DiscoveryRule {
+	if dr.Spec.IPRange != nil {
+		drInit, ok := DiscoveryRules[IPRangeDiscoveryRule]
+		if !ok {
+			return nil
+		}
+		return drInit()
+	}
+	return nil
+}

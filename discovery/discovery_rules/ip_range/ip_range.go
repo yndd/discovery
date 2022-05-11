@@ -66,11 +66,11 @@ func (i *ipRangeDR) SetClient(c client.Client) {
 
 //
 func (i *ipRangeDR) run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule) error {
-	hosts, err := getHosts(dr.Spec.IPranges...)
+	hosts, err := getHosts(dr.Spec.IPRange.CIDRs...)
 	if err != nil {
 		return err
 	}
-	for _, e := range dr.Spec.Excludes {
+	for _, e := range dr.Spec.IPRange.Excludes {
 		excludes, err := getHosts(e)
 		if err != nil {
 			return err
