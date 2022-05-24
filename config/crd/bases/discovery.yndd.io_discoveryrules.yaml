@@ -43,16 +43,11 @@ spec:
               check-reachability:
                 type: boolean
               credentials:
-                description: secret name
+                description: credentials used to access the target, a secret name
                 type: string
               enabled:
                 description: enables the discovery rule
                 type: boolean
-              exclude:
-                description: IP CIDR(s) to be excluded
-                items:
-                  type: string
-                type: array
               headers:
                 additionalProperties:
                   type: string
@@ -61,10 +56,17 @@ spec:
                 description: Insecure connection
                 type: boolean
               ip-range:
-                description: IPRange Type IP CIDR(s) to be scanned
-                items:
-                  type: string
-                type: array
+                properties:
+                  cidrs:
+                    items:
+                      type: string
+                    type: array
+                  excludes:
+                    description: IP CIDR(s) to be excluded
+                    items:
+                      type: string
+                    type: array
+                type: object
               method:
                 type: string
               oauth:
@@ -80,8 +82,7 @@ spec:
                 description: Port is the gNMI port number
                 type: integer
               protocol:
-                description: type specific fields Properties runtime.RawExtension
-                  `json:"properties,omitempty"` gNMI, netconf
+                description: gNMI, netconf
                 type: string
               response-template:
                 type: string
@@ -93,9 +94,6 @@ spec:
                 type: string
               topology-namespace:
                 description: TopoWatch Type
-                type: string
-              type:
-                description: 'discovery rule type: ip-range, rest api, netbox, consul,...'
                 type: string
               url:
                 description: API Type

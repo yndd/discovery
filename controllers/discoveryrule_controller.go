@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
 	discoveryrules "github.com/yndd/discovery-operator/discovery/discovery_rules"
@@ -36,8 +35,9 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func NewReconciler() *DiscoveryRuleReconciler {
+func NewReconciler(ctx context.Context) *DiscoveryRuleReconciler {
 	return &DiscoveryRuleReconciler{
+		ctx:            ctx,
 		m:              new(sync.Mutex),
 		discoveryRules: make(map[string]discoveryrules.DiscoveryRule),
 	}
@@ -47,8 +47,9 @@ func NewReconciler() *DiscoveryRuleReconciler {
 type DiscoveryRuleReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Logger logging.Logger
 
-	Logger         logging.Logger
+	ctx            context.Context
 	m              *sync.Mutex
 	discoveryRules map[string]discoveryrules.DiscoveryRule
 }
@@ -76,7 +77,7 @@ func (r *DiscoveryRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err := r.Client.Get(ctx, req.NamespacedName, dr)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			logger.Debug("discoveryRule not found")
+			logger.Debug("discovery-rule not found")
 			r.m.Lock()
 			if oldDR, ok := r.discoveryRules[drFullName]; ok {
 				oldDR.Stop()
@@ -89,7 +90,6 @@ func (r *DiscoveryRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	drFullName = fmt.Sprintf("%s/%s", dr.GetNamespace(), dr.GetName())
 	logger = r.Logger.WithValues("discovery-rule", drFullName)
-	logger.Info("")
 
 	r.m.Lock()
 	defer r.m.Unlock()
@@ -100,15 +100,13 @@ func (r *DiscoveryRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 		return ctrl.Result{}, nil
 	}
-	// run discovery rule,
-	drInit, ok := discoveryrules.DiscoveryRules[dr.Spec.Type]
-	if !ok {
-		logger.Info("unknown discovery-rule type", "type", dr.Spec.Type)
-		return reconcile.Result{}, fmt.Errorf("unknown discovery rule type %s", dr.Spec.Type)
+	// run discovery rule
+	drule := discoveryrules.Initialize(dr)
+	if drule == nil {
+		return ctrl.Result{}, fmt.Errorf("could not determine type of discovery rule %q", drFullName)
 	}
-	drule := drInit()
 	r.discoveryRules[drFullName] = drule
-	go drule.Run(context.TODO(), dr, discoveryrules.WithLogger(logger), discoveryrules.WithClient(r.Client))
+	go drule.Run(r.ctx, dr, discoveryrules.WithLogger(logger), discoveryrules.WithClient(r.Client))
 
 	// update discovery rule start time
 	dr.Status.StartTime = time.Now().UnixNano()

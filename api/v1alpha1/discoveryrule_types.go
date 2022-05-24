@@ -21,40 +21,53 @@ import (
 )
 
 // DiscoveryRuleSpec defines the desired state of DiscoveryRule
+//+kubebuilder:subresource:ip-range
 type DiscoveryRuleSpec struct {
-	// discovery rule type: ip-range, rest api, netbox, consul,...
-	Type string `json:"type,omitempty"`
+	// enables the discovery rule
+	Enabled bool `json:"enabled,omitempty"`
+
 	// wait period between discovery rule runs
 	// +kubebuilder:default:="1m"
 	Period metav1.Duration `json:"period,omitempty"`
-	// enables the discovery rule
-	Enabled bool `json:"enabled,omitempty"`
-	// type specific fields
-	// Properties runtime.RawExtension `json:"properties,omitempty"`
+
 	// gNMI, netconf
 	Protocol string `json:"protocol,omitempty"`
+
 	// Port is the gNMI port number
 	// +kubebuilder:default:=57400
 	Port uint `json:"port,omitempty"`
 
-	// secret name
+	// credentials used to access the target, a secret name
 	Credentials string `json:"credentials,omitempty"`
+
 	// Insecure connection
 	Insecure bool `json:"insecure,omitempty"`
+
 	// certificate Name
 	Certificate string `json:"certificate,omitempty"`
+
 	// target namespace
 	TargetNamespace string `json:"target-namespace,omitempty"`
+
 	// target name template
 	TargetNameTemplate string `json:"target-name-template,omitempty"`
+	// IP range discovery rule
+	IPRange *IPRangeRule `json:"ip-range,omitempty"`
+	// API discovery rule
+	APIRule *APIRule `json:"api-rule,omitempty"`
+	// Topology discovery rule
+	TopologyRule *TopologyRule `json:"topology-rule,omitempty"`
+	// NetBox Type
 
-	// IPRange Type
-	// IP CIDR(s) to be scanned
-	IPrange []string `json:"ip-range,omitempty"`
+	// Consul Type
+}
+
+type IPRangeRule struct {
+	CIDRs []string `json:"cidrs,omitempty"`
 	// IP CIDR(s) to be excluded
-	Exclude []string `json:"exclude,omitempty"`
-
-	// API Type
+	Excludes []string `json:"excludes,omitempty"`
+}
+type APIRule struct {
 	URL               string            `json:"url,omitempty"`
 	Method            string            `json:"method,omitempty"`
 	ResponseTemplate  string            `json:"response-template,omitempty"`
@@ -63,13 +76,10 @@ type DiscoveryRuleSpec struct {
 	Headers           map[string]string `json:"headers,omitempty"`
 	// TODO: should become a struct with username/password and/or token
 	OAuth string `json:"oauth,omitempty"`
+}
 
-	// TopoWatch Type
+type TopologyRule struct {
 	TopologyNamespace string `json:"topology-namespace,omitempty"`
-
-	// NetBox Type
-
-	// Consul Type
 }
 
 // DiscoveryRuleStatus defines the observed state of DiscoveryRule

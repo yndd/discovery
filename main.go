@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -67,7 +68,7 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.UintVar(&maxConcurrency, "max-concurrency", 10, "max concurrent reconciles")
+	flag.UintVar(&maxConcurrency, "max-concurrency", 10, "max concurrent reconciles.")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -88,7 +89,9 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-	c := controllers.NewReconciler()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c := controllers.NewReconciler(ctx)
 	c.Client = mgr.GetClient()
 	c.Scheme = mgr.GetScheme()
 	c.Logger = logging.NewLogrLogger(logger)
