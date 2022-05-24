@@ -68,7 +68,7 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.UintVar(&maxConcurrency, "max-concurrency", 10, "max concurrent reconciles")
+	flag.UintVar(&maxConcurrency, "max-concurrency", 10, "max concurrent reconciles.")
 	opts := zap.Options{
 		Development: true,
 	}

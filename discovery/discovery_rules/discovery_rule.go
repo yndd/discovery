@@ -94,7 +94,7 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 			Address:        &t.Config.Address,
 			CredentialName: pointer.String(dr.Spec.Credentials),
 			Encoding:       ygotnddtarget.NddTarget_Encoding_ASCII,
-			Insecure:       pointer.Bool(false),
+			Insecure:       pointer.Bool(dr.Spec.Insecure),
 			Protocol:       ygotnddtarget.NddTarget_Protocol_gnmi,
 			// Proxy:          new(string),
 			SkipVerify: pointer.Bool(true),

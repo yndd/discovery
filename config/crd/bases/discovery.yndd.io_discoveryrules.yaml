@@ -43,7 +43,7 @@ spec:
               check-reachability:
                 type: boolean
               credentials:
-                description: secret name
+                description: credentials used to access the target, a secret name
                 type: string
               enabled:
                 description: enables the discovery rule
@@ -75,17 +75,14 @@ spec:
                 type: string
               period:
                 default: 1m
-                description: 'discovery rule type: ip-range, rest api, netbox, consul,...
-                  Type string `json:"type,omitempty"` wait period between discovery
-                  rule runs'
+                description: wait period between discovery rule runs
                 type: string
               port:
                 default: 57400
                 description: Port is the gNMI port number
                 type: integer
               protocol:
-                description: type specific fields Properties runtime.RawExtension
-                  `json:"properties,omitempty"` gNMI, netconf
+                description: gNMI, netconf
                 type: string
               response-template:
                 type: string

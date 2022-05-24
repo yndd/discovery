@@ -77,7 +77,7 @@ func (r *DiscoveryRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err := r.Client.Get(ctx, req.NamespacedName, dr)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			logger.Debug("discoveryRule not found")
+			logger.Debug("discovery-rule not found")
 			r.m.Lock()
 			if oldDR, ok := r.discoveryRules[drFullName]; ok {
 				oldDR.Stop()
@@ -90,7 +90,6 @@ func (r *DiscoveryRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	drFullName = fmt.Sprintf("%s/%s", dr.GetNamespace(), dr.GetName())
 	logger = r.Logger.WithValues("discovery-rule", drFullName)
-	logger.Info("")
 
 	r.m.Lock()
 	defer r.m.Unlock()

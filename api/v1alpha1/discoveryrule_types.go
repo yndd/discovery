@@ -51,22 +51,12 @@ type DiscoveryRuleSpec struct {
 
 	// target name template
 	TargetNameTemplate string `json:"target-name-template,omitempty"`
-
+	// IP range discovery rule
 	IPRange *IPRangeRule `json:"ip-range,omitempty"`
-
-	// API Type
-	URL               string            `json:"url,omitempty"`
-	Method            string            `json:"method,omitempty"`
-	ResponseTemplate  string            `json:"response-template,omitempty"`
-	APIInsecure       bool              `json:"api-insecure,omitempty"`
-	CheckReachability bool              `json:"check-reachability,omitempty"`
-	Headers           map[string]string `json:"headers,omitempty"`
-	// TODO: should become a struct with username/password and/or token
-	OAuth string `json:"oauth,omitempty"`
-
-	// TopoWatch Type
-	TopologyNamespace string `json:"topology-namespace,omitempty"`
-
+	// API discovery rule
+	APIRule *APIRule `json:"api-rule,omitempty"`
+	// Topology discovery rule
+	TopologyRule *TopologyRule `json:"topology-rule,omitempty"`
 	// NetBox Type
 
 	// Consul Type
@@ -76,6 +66,20 @@ type IPRangeRule struct {
 	CIDRs []string `json:"cidrs,omitempty"`
 	// IP CIDR(s) to be excluded
 	Excludes []string `json:"excludes,omitempty"`
+}
+type APIRule struct {
+	URL               string            `json:"url,omitempty"`
+	Method            string            `json:"method,omitempty"`
+	ResponseTemplate  string            `json:"response-template,omitempty"`
+	APIInsecure       bool              `json:"api-insecure,omitempty"`
+	CheckReachability bool              `json:"check-reachability,omitempty"`
+	Headers           map[string]string `json:"headers,omitempty"`
+	// TODO: should become a struct with username/password and/or token
+	OAuth string `json:"oauth,omitempty"`
+}
+
+type TopologyRule struct {
+	TopologyNamespace string `json:"topology-namespace,omitempty"`
 }
 
 // DiscoveryRuleStatus defines the observed state of DiscoveryRule
