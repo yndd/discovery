@@ -46,11 +46,8 @@ type DiscoveryRuleSpec struct {
 	// certificate Name
 	Certificate string `json:"certificate,omitempty"`
 
-	// target namespace
-	TargetNamespace string `json:"target-namespace,omitempty"`
-
-	// target name template
-	TargetNameTemplate string `json:"target-name-template,omitempty"`
+	// target template
+	TargetTemplate *TargetTemplate `json:"target-template,omitempty"`
 	// IP range discovery rule
 	IPRange *IPRangeRule `json:"ip-range,omitempty"`
 	// API discovery rule
@@ -82,6 +79,22 @@ type TopologyRule struct {
 	TopologyNamespace string `json:"topology-namespace,omitempty"`
 }
 
+type TargetTemplate struct {
+	// target namespace
+	Namespace string `json:"namespace,omitempty"`
+
+	// target name template
+	NameTemplate string `json:"name-template,omitempty"`
+
+	// Annotations is a key value map to be copied to the target CR.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Labels is a key value map to be copied to the target CR.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
 // DiscoveryRuleStatus defines the observed state of DiscoveryRule
 type DiscoveryRuleStatus struct {
 	StartTime int64 `json:"start-time,omitempty"`
@@ -110,4 +123,25 @@ type DiscoveryRuleList struct {
 
 func init() {
 	SchemeBuilder.Register(&DiscoveryRule{}, &DiscoveryRuleList{})
+}
+
+func (dr *DiscoveryRule) GetTargetLabels() map[string]string {
+	if dr.Spec.TargetTemplate == nil {
+		return nil
+	}
+	return dr.Spec.TargetTemplate.Labels
+}
+
+func (dr *DiscoveryRule) GetTargetAnnotations() map[string]string {
+	if dr.Spec.TargetTemplate == nil {
+		return map[string]string{
+			"yndd.io/discovery-rule": dr.GetName(),
+		}
+	}
+	m := dr.Spec.TargetTemplate.Annotations
+	if m == nil {
+		m = make(map[string]string)
+	}
+	m["yndd.io/discovery-rule"] = dr.GetName()
+	return m
 }

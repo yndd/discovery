@@ -35,27 +35,42 @@ spec:
           spec:
             description: DiscoveryRuleSpec defines the desired state of DiscoveryRule
             properties:
-              api-insecure:
-                type: boolean
+              api-rule:
+                description: API discovery rule
+                properties:
+                  api-insecure:
+                    type: boolean
+                  check-reachability:
+                    type: boolean
+                  headers:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  method:
+                    type: string
+                  oauth:
+                    description: 'TODO: should become a struct with username/password
+                      and/or token'
+                    type: string
+                  response-template:
+                    type: string
+                  url:
+                    type: string
+                type: object
               certificate:
                 description: certificate Name
                 type: string
-              check-reachability:
-                type: boolean
               credentials:
                 description: credentials used to access the target, a secret name
                 type: string
               enabled:
                 description: enables the discovery rule
                 type: boolean
-              headers:
-                additionalProperties:
-                  type: string
-                type: object
               insecure:
                 description: Insecure connection
                 type: boolean
               ip-range:
+                description: IP range discovery rule
                 properties:
                   cidrs:
                     items:
@@ -67,12 +82,6 @@ spec:
                       type: string
                     type: array
                 type: object
-              method:
-                type: string
-              oauth:
-                description: 'TODO: should become a struct with username/password
-                  and/or token'
-                type: string
               period:
                 default: 1m
                 description: wait period between discovery rule runs
@@ -84,20 +93,34 @@ spec:
               protocol:
                 description: gNMI, netconf
                 type: string
-              response-template:
-                type: string
-              target-name-template:
-                description: target name template
-                type: string
-              target-namespace:
-                description: target namespace
-                type: string
-              topology-namespace:
-                description: TopoWatch Type
-                type: string
-              url:
-                description: API Type
-                type: string
+              target-template:
+                description: target template
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations is a key value map to be copied to the
+                      target CR.
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels is a key value map to be copied to the target
+                      CR.
+                    type: object
+                  name-template:
+                    description: target name template
+                    type: string
+                  namespace:
+                    description: target namespace
+                    type: string
+                type: object
+              topology-rule:
+                description: Topology discovery rule
+                properties:
+                  topology-namespace:
+                    type: string
+                type: object
             type: object
           status:
             description: DiscoveryRuleStatus defines the observed state of DiscoveryRule

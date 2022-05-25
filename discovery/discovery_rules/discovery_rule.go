@@ -81,7 +81,10 @@ OUTER:
 }
 
 func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.DiscoveryRule, di *targetv1.DiscoveryInfo, t *target.Target) error {
-	namespace := dr.Spec.TargetNamespace
+	var namespace string
+	if dr.Spec.TargetTemplate != nil {
+		namespace = dr.Spec.TargetTemplate.Namespace
+	}
 	if namespace == "" {
 		namespace = dr.GetNamespace()
 	}
@@ -96,9 +99,7 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 			Encoding:       ygotnddtarget.NddTarget_Encoding_ASCII,
 			Insecure:       pointer.Bool(dr.Spec.Insecure),
 			Protocol:       ygotnddtarget.NddTarget_Protocol_gnmi,
-			// Proxy:          new(string),
-			SkipVerify: pointer.Bool(true),
-			// TlsCredentialName: new(string),
+			SkipVerify:     pointer.Bool(true),
 		},
 		Description: pointer.String(fmt.Sprintf("discovered by rule %s", dr.GetName())),
 		Name:        pointer.String(targetName),
@@ -122,15 +123,14 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 	}, targetCR)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
+			anno := dr.GetTargetAnnotations()
+			anno["yndd.io/mgmt-address"] = t.Config.Address
 			targetCR = &targetv1.Target{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      targetName,
-					Namespace: namespace,
-					Labels:    map[string]string{},
-					Annotations: map[string]string{
-						"yndd.io/discovery-rule": dr.GetName(),
-						"yndd.io/mgmt-address":   t.Config.Address,
-					},
+					Name:        targetName,
+					Namespace:   namespace,
+					Labels:      dr.GetTargetLabels(),
+					Annotations: anno,
 				},
 				Spec: targetv1.TargetSpec{
 					Properties: runtime.RawExtension{Raw: []byte(j)},
