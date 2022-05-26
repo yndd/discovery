@@ -123,13 +123,19 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 	}, targetCR)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			anno := dr.GetTargetAnnotations()
-			anno["yndd.io/mgmt-address"] = t.Config.Address
+			labels, err := dr.GetTargetLabels(nddTarget)
+			if err != nil {
+				return err
+			}
+			anno, err := dr.GetTargetAnnotations(nddTarget)
+			if err != nil {
+				return err
+			}
 			targetCR = &targetv1.Target{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        targetName,
 					Namespace:   namespace,
-					Labels:      dr.GetTargetLabels(),
+					Labels:      labels,
 					Annotations: anno,
 				},
 				Spec: targetv1.TargetSpec{

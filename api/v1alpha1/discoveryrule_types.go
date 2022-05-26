@@ -17,6 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"bytes"
+	"text/template"
+
+	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -125,23 +129,60 @@ func init() {
 	SchemeBuilder.Register(&DiscoveryRule{}, &DiscoveryRuleList{})
 }
 
-func (dr *DiscoveryRule) GetTargetLabels() map[string]string {
-	if dr.Spec.TargetTemplate == nil {
-		return nil
-	}
-	return dr.Spec.TargetTemplate.Labels
-}
-
-func (dr *DiscoveryRule) GetTargetAnnotations() map[string]string {
+func (dr *DiscoveryRule) GetTargetLabels(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
 	if dr.Spec.TargetTemplate == nil {
 		return map[string]string{
+			"yndd.io/vendor-type":    nddt.VendorType.String(),
 			"yndd.io/discovery-rule": dr.GetName(),
-		}
+		}, nil
 	}
-	m := dr.Spec.TargetTemplate.Annotations
+	return dr.buildTags(dr.Spec.TargetTemplate.Labels, nddt)
+}
+
+func (dr *DiscoveryRule) GetTargetAnnotations(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
+	if dr.Spec.TargetTemplate == nil {
+		return map[string]string{
+			"yndd.io/vendor-type":    nddt.VendorType.String(),
+			"yndd.io/discovery-rule": dr.GetName(),
+		}, nil
+	}
+	return dr.buildTags(dr.Spec.TargetTemplate.Annotations, nddt)
+}
+
+func (dr *DiscoveryRule) buildTags(m map[string]string, nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
+	// if dr.Spec.TargetTemplate == nil && nddt != nil {
+	// 	return map[string]string{
+	// 		"yndd.io/vendor-type":    nddt.VendorType.String(),
+	// 		"yndd.io/discovery-rule": dr.GetName(),
+	// 	}, nil
+	// }
+	// initialize map if empty
 	if m == nil {
 		m = make(map[string]string)
 	}
-	m["yndd.io/discovery-rule"] = dr.GetName()
-	return m
+	// add vendor-type and discovery-rule labels
+	if nddt != nil {
+		if _, ok := m["yndd.io/vendor-type"]; !ok {
+			m["yndd.io/vendor-type"] = nddt.VendorType.String()
+		}
+		if _, ok := m["yndd.io/discovery-rule"]; !ok {
+			m["yndd.io/discovery-rule"] = dr.GetName()
+		}
+	}
+	// render values templates
+	labels := make(map[string]string, len(m))
+	b := new(bytes.Buffer)
+	for k, v := range m {
+		tpl, err := template.New(k).Parse(v)
+		if err != nil {
+			return nil, err
+		}
+		b.Reset()
+		err = tpl.Execute(b, nddt)
+		if err != nil {
+			return nil, err
+		}
+		labels[k] = b.String()
+	}
+	return labels, nil
 }
