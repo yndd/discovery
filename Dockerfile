@@ -20,7 +20,22 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager cmd/main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+#
+FROM alpine:latest
+RUN apk add --update && \
+    apk add --no-cache openssh && \
+    apk add curl && \
+    apk add tcpdump && \
+    apk add iperf3 &&\
+    apk add netcat-openbsd && \
+    apk add ethtool && \
+    apk add bonding && \
+    rm -rf /tmp/*/var/cache/apk/*
+#RUN curl -sL https://github.com/karimra/gnmic/raw/master/install.sh | sh
+RUN curl -sL https://get-gnmic.kmrd.dev | sh
+#RUN GRPC_HEALTH_PROBE_VERSION=v0.3.1 && \
+#    wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+#    chmod +x /bin/grpc_health_probeFROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
