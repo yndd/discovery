@@ -25,3 +25,4 @@ testbin/*
 *.swo
 *~
 PRIVATE.md
+*.nddpkg

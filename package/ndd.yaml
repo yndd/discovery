@@ -9,6 +9,9 @@ spec:
     name: discovery-controller
     type: deployment
     permissionRequests:
+    - apiGroups: ["*"]
+      resources: [secrets]
+      verbs: [get, list, watch]
     - apiGroups: [dvr.ndd.yndd.io]
       resources: [targets]
       verbs: [get, list, watch, update, patch, create, delete]
