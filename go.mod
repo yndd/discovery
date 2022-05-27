@@ -3,7 +3,6 @@ module github.com/yndd/discovery
 go 1.17
 
 require (
-	github.com/go-ping/ping v1.0.0
 	github.com/karimra/gnmic v0.24.2
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
