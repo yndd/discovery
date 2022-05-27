@@ -13,7 +13,7 @@ spec:
       resources: [secrets]
       verbs: [get, list, watch]
     - apiGroups: [dvr.ndd.yndd.io]
-      resources: [targets]
+      resources: [targets, targets/status]
       verbs: [get, list, watch, update, patch, create, delete]
     - apiGroups: [discovery.yndd.io]
       resources: [discoveryrules]
