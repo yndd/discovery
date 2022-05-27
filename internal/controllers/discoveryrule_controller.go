@@ -29,8 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
-	discoveryrules "github.com/yndd/discovery-operator/discovery/discovery_rules"
+	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
+	discoveryrules "github.com/yndd/discovery/internal/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )

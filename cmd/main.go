@@ -22,9 +22,9 @@ import (
 	"os"
 
 	// Import all discovery plugins
-	_ "github.com/yndd/discovery-operator/discovery/discoverers/all"
+	_ "github.com/yndd/discovery/internal/discovery/discoverers/all"
 	// Import all discovery rules
-	_ "github.com/yndd/discovery-operator/discovery/discovery_rules/all"
+	_ "github.com/yndd/discovery/internal/discovery/discovery_rules/all"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -39,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
-	"github.com/yndd/discovery-operator/controllers"
+	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
+	"github.com/yndd/discovery/internal/controllers"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	//+kubebuilder:scaffold:imports
 )

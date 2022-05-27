@@ -1,8 +1,8 @@
 domain: yndd.io
 layout:
 - go.kubebuilder.io/v3
-projectName: discovery-operator
-repo: github.com/yndd/discovery-operator
+projectName: discovery
+repo: github.com/yndd/discovery
 resources:
 - api:
     crdVersion: v1
@@ -11,6 +11,6 @@ resources:
   domain: yndd.io
   group: discovery
   kind: DiscoveryRule
-  path: github.com/yndd/discovery-operator/api/v1alpha1
+  path: github.com/yndd/discovery/api/v1alpha1
   version: v1alpha1
 version: "3"

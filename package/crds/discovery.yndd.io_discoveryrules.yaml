@@ -1,0 +1,142 @@
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.8.0
+  creationTimestamp: null
+  name: discoveryrules.discovery.yndd.io
+spec:
+  group: discovery.yndd.io
+  names:
+    kind: DiscoveryRule
+    listKind: DiscoveryRuleList
+    plural: discoveryrules
+    singular: discoveryrule
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DiscoveryRule is the Schema for the discoveryrules API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DiscoveryRuleSpec defines the desired state of DiscoveryRule
+            properties:
+              api-rule:
+                description: API discovery rule
+                properties:
+                  api-insecure:
+                    type: boolean
+                  check-reachability:
+                    type: boolean
+                  headers:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  method:
+                    type: string
+                  oauth:
+                    description: 'TODO: should become a struct with username/password
+                      and/or token'
+                    type: string
+                  response-template:
+                    type: string
+                  url:
+                    type: string
+                type: object
+              certificate:
+                description: certificate Name
+                type: string
+              credentials:
+                description: credentials used to access the target, a secret name
+                type: string
+              enabled:
+                description: enables the discovery rule
+                type: boolean
+              insecure:
+                description: Insecure connection
+                type: boolean
+              ip-range:
+                description: IP range discovery rule
+                properties:
+                  cidrs:
+                    items:
+                      type: string
+                    type: array
+                  excludes:
+                    description: IP CIDR(s) to be excluded
+                    items:
+                      type: string
+                    type: array
+                type: object
+              period:
+                default: 1m
+                description: wait period between discovery rule runs
+                type: string
+              port:
+                default: 57400
+                description: Port is the gNMI port number
+                type: integer
+              protocol:
+                description: gNMI, netconf
+                type: string
+              target-template:
+                description: target template
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: Annotations is a key value map to be copied to the
+                      target CR.
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels is a key value map to be copied to the target
+                      CR.
+                    type: object
+                  name-template:
+                    description: target name template
+                    type: string
+                  namespace:
+                    description: target namespace
+                    type: string
+                type: object
+              topology-rule:
+                description: Topology discovery rule
+                properties:
+                  topology-namespace:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: DiscoveryRuleStatus defines the observed state of DiscoveryRule
+            properties:
+              start-time:
+                format: int64
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

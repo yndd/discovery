@@ -11,8 +11,8 @@ import (
 
 	"github.com/go-ping/ping"
 	gapi "github.com/karimra/gnmic/api"
-	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
-	discoveryrules "github.com/yndd/discovery-operator/discovery/discovery_rules"
+	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
+	discoveryrules "github.com/yndd/discovery/internal/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
