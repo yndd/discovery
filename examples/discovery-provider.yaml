@@ -1,8 +1,8 @@
 apiVersion: pkg.ndd.yndd.io/v1
 kind: Provider
 metadata:
-  name: discvery-controller
+  name: discovery-provider
   namespace: ndd-system
 spec:
-  package: yndd/discovery-controller:latest
+  package: yndd/discovery-provider:latest
   packagePullPolicy: Always
