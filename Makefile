@@ -8,7 +8,7 @@ VERSION ?= latest
 REPO ?= yndd
 # IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
 # This variable is used to construct full image tags for ndd packages.
-IMAGE_TAG_BASE ?= $(REPO)/discovery-controller
+IMAGE_TAG_BASE ?= $(REPO)/discovery-provider
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE)-controller:$(VERSION)

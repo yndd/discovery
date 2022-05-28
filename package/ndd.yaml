@@ -32,7 +32,7 @@ spec:
           name: https
     - container:
         name: controller
-        image: yndd/discovery-controller-controller:latest
+        image: yndd/discovery-provider-controller:latest
       extras:
       - {name: metrics, service: true, port: 8443, target-port: 443}
       - {name: profiler, volume: true}
