@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/karimra/gnmic/target"
-	discoveryv1alphav1 "github.com/yndd/discovery-operator/api/v1alpha1"
+	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
 )
 

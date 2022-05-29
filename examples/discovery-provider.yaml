@@ -1,0 +1,8 @@
+apiVersion: pkg.ndd.yndd.io/v1
+kind: Provider
+metadata:
+  name: discovery-provider
+  namespace: ndd-system
+spec:
+  package: yndd/discovery-provider:latest
+  packagePullPolicy: Always

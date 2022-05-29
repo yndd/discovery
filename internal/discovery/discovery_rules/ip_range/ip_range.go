@@ -9,10 +9,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/go-ping/ping"
 	gapi "github.com/karimra/gnmic/api"
-	discoveryv1alpha1 "github.com/yndd/discovery-operator/api/v1alpha1"
-	discoveryrules "github.com/yndd/discovery-operator/discovery/discovery_rules"
+	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
+	discoveryrules "github.com/yndd/discovery/internal/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -85,11 +84,6 @@ func (i *ipRangeDR) run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			err = pingIP(ip)
-			if err != nil {
-				i.logger.Info("Not reachable", "IP", ip, "error", err)
-				continue
-			}
 			err := i.discover(ctx, dr, ip)
 			if err != nil {
 				i.logger.Info("Failed discovery", "IP", ip, "error", err)
@@ -122,13 +116,6 @@ func getHosts(cidrs ...string) (map[string]struct{}, error) {
 		}
 	}
 	return ips, nil
-}
-
-func pingIP(ip string) error {
-	pinger := ping.New(ip)
-	pinger.Count = 1
-	pinger.Timeout = 1 * time.Second
-	return pinger.Run()
 }
 
 func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule, ip string) error {

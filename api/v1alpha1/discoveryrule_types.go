@@ -24,6 +24,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	LabelKeyDiscoveryRule = "discovery.yndd.io/discovery-rule"
+	LabelKeyVendorType    = "discovery.yndd.io/vendor-type"
+)
+
 // DiscoveryRuleSpec defines the desired state of DiscoveryRule
 //+kubebuilder:subresource:ip-range
 type DiscoveryRuleSpec struct {
@@ -132,8 +137,8 @@ func init() {
 func (dr *DiscoveryRule) GetTargetLabels(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
 	if dr.Spec.TargetTemplate == nil {
 		return map[string]string{
-			"yndd.io/vendor-type":    nddt.VendorType.String(),
-			"yndd.io/discovery-rule": dr.GetName(),
+			LabelKeyVendorType:    nddt.VendorType.String(),
+			LabelKeyDiscoveryRule: dr.GetName(),
 		}, nil
 	}
 	return dr.buildTags(dr.Spec.TargetTemplate.Labels, nddt)
@@ -142,8 +147,8 @@ func (dr *DiscoveryRule) GetTargetLabels(nddt *ygotnddtarget.NddTarget_TargetEnt
 func (dr *DiscoveryRule) GetTargetAnnotations(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
 	if dr.Spec.TargetTemplate == nil {
 		return map[string]string{
-			"yndd.io/vendor-type":    nddt.VendorType.String(),
-			"yndd.io/discovery-rule": dr.GetName(),
+			LabelKeyVendorType:    nddt.VendorType.String(),
+			LabelKeyDiscoveryRule: dr.GetName(),
 		}, nil
 	}
 	return dr.buildTags(dr.Spec.TargetTemplate.Annotations, nddt)
@@ -162,11 +167,11 @@ func (dr *DiscoveryRule) buildTags(m map[string]string, nddt *ygotnddtarget.NddT
 	}
 	// add vendor-type and discovery-rule labels
 	if nddt != nil {
-		if _, ok := m["yndd.io/vendor-type"]; !ok {
-			m["yndd.io/vendor-type"] = nddt.VendorType.String()
+		if _, ok := m[LabelKeyVendorType]; !ok {
+			m[LabelKeyVendorType] = nddt.VendorType.String()
 		}
-		if _, ok := m["yndd.io/discovery-rule"]; !ok {
-			m["yndd.io/discovery-rule"] = dr.GetName()
+		if _, ok := m[LabelKeyDiscoveryRule]; !ok {
+			m[LabelKeyDiscoveryRule] = dr.GetName()
 		}
 	}
 	// render values templates

@@ -1,0 +1,41 @@
+
+apiVersion: meta.pkg.ndd.yndd.io/v1
+kind: Provider
+metadata:
+  name: discovery-provider
+  namespace: ndd-system
+spec:
+  pod:
+    name: discovery-provider
+    type: deployment
+    permissionRequests:
+    - apiGroups: ["*"]
+      resources: [secrets]
+      verbs: [get, list, watch]
+    - apiGroups: [dvr.ndd.yndd.io]
+      resources: [targets, targets/status]
+      verbs: [get, list, watch, update, patch, create, delete]
+    - apiGroups: [discovery.yndd.io]
+      resources: [discoveryrules]
+      verbs: [get, list, watch, update, patch, create, delete]
+    containers:
+    - container:
+        name: kube-rbac-proxy
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        ports:
+        - containerPort: 8443
+          name: https
+    - container:
+        name: controller
+        image: yndd/discovery-provider-controller:latest
+      extras:
+      - {name: metrics, service: true, port: 8443, target-port: 443}
+      - {name: profiler, volume: true}
+    
+          
+

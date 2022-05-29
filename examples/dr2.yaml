@@ -11,7 +11,7 @@ spec:
   credentials: dr1-credentials
   target-template:
     labels:
-      "yndd.io/certificate-profile": "ndd-system/cert-profile-2"
+      "yndd.io/certificate-profile": "cert-profile-2"
   ip-range: 
     cidrs:
       - 172.100.100.3/32
