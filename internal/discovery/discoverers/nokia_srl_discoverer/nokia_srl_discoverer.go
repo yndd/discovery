@@ -2,16 +2,15 @@ package nokia_srl_discoverer
 
 import (
 	"context"
+	"time"
 
 	gapi "github.com/karimra/gnmic/api"
 	"github.com/karimra/gnmic/target"
 	gutils "github.com/karimra/gnmic/utils"
-	"github.com/openconfig/ygot/ygot"
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
 	"github.com/yndd/ndd-runtime/pkg/utils"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
 const (
@@ -44,31 +43,38 @@ func (s *srlDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Dis
 	if err != nil {
 		return nil, err
 	}
+	capRsp, err := t.Capabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := t.Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	devDetails := &targetv1.DiscoveryInfo{
-		VendorType: ygot.String(ygotnddtarget.NddTarget_VendorType_nokia_srl.String()),
+	di := &targetv1.DiscoveryInfo{
+		VendorType:         targetv1.VendorTypeNokiaSRL,
+		LastSeen:           time.Now().UnixNano(),
+		SupportedEncodings: make([]string, 0, len(capRsp.GetSupportedEncodings())),
+	}
+	for _, enc := range capRsp.GetSupportedEncodings() {
+		di.SupportedEncodings = append(di.SupportedEncodings, enc.String())
 	}
 	for _, notif := range resp.GetNotification() {
 		for _, upd := range notif.GetUpdate() {
 			p := gutils.GnmiPathToXPath(upd.GetPath(), true)
 			switch p {
 			case srlSwVersionPath:
-				if devDetails.SwVersion == nil {
-					devDetails.SwVersion = utils.StringPtr(upd.GetVal().GetStringVal())
-				}
+				di.SwVersion = utils.StringPtr(upd.GetVal().GetStringVal())
 			case srlChassisTypePath:
-				devDetails.Kind = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.Platform = upd.GetVal().GetStringVal()
 			case srlSerialNumberPath:
-				devDetails.SerialNumber = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.SerialNumber = utils.StringPtr(upd.GetVal().GetStringVal())
 			case srlHWMacAddrPath:
-				devDetails.MacAddress = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.MacAddress = utils.StringPtr(upd.GetVal().GetStringVal())
 			case srlHostnamePath:
-				devDetails.HostName = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.HostName = upd.GetVal().GetStringVal()
 			}
 		}
 	}
-	return devDetails, nil
+	return di, nil
 }

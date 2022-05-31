@@ -5,7 +5,7 @@ import (
 
 	"github.com/karimra/gnmic/target"
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
 const (

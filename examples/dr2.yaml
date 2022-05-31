@@ -9,10 +9,10 @@ spec:
   insecure: true
   protocol: gnmi
   credentials: dr1-credentials
-  target-template:
+  targetTemplate:
     labels:
       "yndd.io/certificate-profile": "cert-profile-2"
-  ip-range: 
+  ipRange: 
     cidrs:
       - 172.100.100.3/32
       - 172.100.100.4/32

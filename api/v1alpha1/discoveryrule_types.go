@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +30,7 @@ const (
 )
 
 // DiscoveryRuleSpec defines the desired state of DiscoveryRule
-//+kubebuilder:subresource:ip-range
+// +kubebuilder:subresource:ipRange
 type DiscoveryRuleSpec struct {
 	// enables the discovery rule
 	Enabled bool `json:"enabled,omitempty"`
@@ -46,7 +46,7 @@ type DiscoveryRuleSpec struct {
 	// +kubebuilder:default:=57400
 	Port uint `json:"port,omitempty"`
 
-	// credentials used to access the target, a secret name
+	// secret name where the credentials used to access the target are stored
 	Credentials string `json:"credentials,omitempty"`
 
 	// Insecure connection
@@ -56,36 +56,40 @@ type DiscoveryRuleSpec struct {
 	Certificate string `json:"certificate,omitempty"`
 
 	// target template
-	TargetTemplate *TargetTemplate `json:"target-template,omitempty"`
+	TargetTemplate *TargetTemplate `json:"targetTemplate,omitempty"`
 	// IP range discovery rule
-	IPRange *IPRangeRule `json:"ip-range,omitempty"`
+	IPRange *IPRangeRule `json:"ipRange,omitempty"`
 	// API discovery rule
-	APIRule *APIRule `json:"api-rule,omitempty"`
+	APIRule *APIRule `json:"apiRule,omitempty"`
 	// Topology discovery rule
-	TopologyRule *TopologyRule `json:"topology-rule,omitempty"`
+	TopologyRule *TopologyRule `json:"topologyRule,omitempty"`
 	// NetBox Type
 
 	// Consul Type
 }
 
 type IPRangeRule struct {
+	// list of CIDR(s) to be scanned
 	CIDRs []string `json:"cidrs,omitempty"`
 	// IP CIDR(s) to be excluded
 	Excludes []string `json:"excludes,omitempty"`
+	// number of concurrent IP scan
+	ConcurrentScans int64 `json:"concurrentScans,omitempty"`
 }
+
 type APIRule struct {
 	URL               string            `json:"url,omitempty"`
 	Method            string            `json:"method,omitempty"`
-	ResponseTemplate  string            `json:"response-template,omitempty"`
-	APIInsecure       bool              `json:"api-insecure,omitempty"`
-	CheckReachability bool              `json:"check-reachability,omitempty"`
+	ResponseTemplate  string            `json:"responseTemplate,omitempty"`
+	APIInsecure       bool              `json:"insecure,omitempty"`
+	CheckReachability bool              `json:"checkReachability,omitempty"`
 	Headers           map[string]string `json:"headers,omitempty"`
 	// TODO: should become a struct with username/password and/or token
 	OAuth string `json:"oauth,omitempty"`
 }
 
 type TopologyRule struct {
-	TopologyNamespace string `json:"topology-namespace,omitempty"`
+	TopologyNamespace string `json:"topologyNamespace,omitempty"`
 }
 
 type TargetTemplate struct {
@@ -93,7 +97,7 @@ type TargetTemplate struct {
 	Namespace string `json:"namespace,omitempty"`
 
 	// target name template
-	NameTemplate string `json:"name-template,omitempty"`
+	NameTemplate string `json:"nameTemplate,omitempty"`
 
 	// Annotations is a key value map to be copied to the target CR.
 	// +optional
@@ -106,12 +110,16 @@ type TargetTemplate struct {
 
 // DiscoveryRuleStatus defines the observed state of DiscoveryRule
 type DiscoveryRuleStatus struct {
-	StartTime int64 `json:"start-time,omitempty"`
+	StartTime int64  `json:"startTime,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+// +kubebuilder:printcolumn:name="ENABLED",type="boolean",JSONPath=".spec.enabled",description="True if the discovery rule is enabled"
+// +kubebuilder:printcolumn:name="PROTOCOL",type="string",JSONPath=".spec.protocol",description="Protocol used discover the target"
+// +kubebuilder:printcolumn:name="PERIOD",type="string",JSONPath=".spec.period",description="Wait period between discovery rule runs"
+// +kubebuilder:printcolumn:name="CREDENTIALS",type="string",JSONPath=".spec.credentials",description="Secret name where the credentials used to access the target are stored"
 // DiscoveryRule is the Schema for the discoveryrules API
 type DiscoveryRule struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -134,41 +142,35 @@ func init() {
 	SchemeBuilder.Register(&DiscoveryRule{}, &DiscoveryRuleList{})
 }
 
-func (dr *DiscoveryRule) GetTargetLabels(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
+func (dr *DiscoveryRule) GetTargetLabels(t *targetv1.TargetSpec) (map[string]string, error) {
 	if dr.Spec.TargetTemplate == nil {
 		return map[string]string{
-			LabelKeyVendorType:    nddt.VendorType.String(),
+			LabelKeyVendorType:    string(t.Properties.VendorType),
 			LabelKeyDiscoveryRule: dr.GetName(),
 		}, nil
 	}
-	return dr.buildTags(dr.Spec.TargetTemplate.Labels, nddt)
+	return dr.buildTags(dr.Spec.TargetTemplate.Labels, t)
 }
 
-func (dr *DiscoveryRule) GetTargetAnnotations(nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
+func (dr *DiscoveryRule) GetTargetAnnotations(t *targetv1.TargetSpec) (map[string]string, error) {
 	if dr.Spec.TargetTemplate == nil {
 		return map[string]string{
-			LabelKeyVendorType:    nddt.VendorType.String(),
+			LabelKeyVendorType:    string(t.Properties.VendorType),
 			LabelKeyDiscoveryRule: dr.GetName(),
 		}, nil
 	}
-	return dr.buildTags(dr.Spec.TargetTemplate.Annotations, nddt)
+	return dr.buildTags(dr.Spec.TargetTemplate.Annotations, t)
 }
 
-func (dr *DiscoveryRule) buildTags(m map[string]string, nddt *ygotnddtarget.NddTarget_TargetEntry) (map[string]string, error) {
-	// if dr.Spec.TargetTemplate == nil && nddt != nil {
-	// 	return map[string]string{
-	// 		"yndd.io/vendor-type":    nddt.VendorType.String(),
-	// 		"yndd.io/discovery-rule": dr.GetName(),
-	// 	}, nil
-	// }
+func (dr *DiscoveryRule) buildTags(m map[string]string, t *targetv1.TargetSpec) (map[string]string, error) {
 	// initialize map if empty
 	if m == nil {
 		m = make(map[string]string)
 	}
 	// add vendor-type and discovery-rule labels
-	if nddt != nil {
+	if t != nil {
 		if _, ok := m[LabelKeyVendorType]; !ok {
-			m[LabelKeyVendorType] = nddt.VendorType.String()
+			m[LabelKeyVendorType] = string(t.Properties.VendorType)
 		}
 		if _, ok := m[LabelKeyDiscoveryRule]; !ok {
 			m[LabelKeyDiscoveryRule] = dr.GetName()
@@ -183,7 +185,7 @@ func (dr *DiscoveryRule) buildTags(m map[string]string, nddt *ygotnddtarget.NddT
 			return nil, err
 		}
 		b.Reset()
-		err = tpl.Execute(b, nddt)
+		err = tpl.Execute(b, t)
 		if err != nil {
 			return nil, err
 		}

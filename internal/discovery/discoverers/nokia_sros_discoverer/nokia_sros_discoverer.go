@@ -3,16 +3,15 @@ package nokia_sros_discoverer
 import (
 	"context"
 	"strings"
+	"time"
 
 	gapi "github.com/karimra/gnmic/api"
 	"github.com/karimra/gnmic/target"
 	gutils "github.com/karimra/gnmic/utils"
-	"github.com/openconfig/ygot/ygot"
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
 	"github.com/yndd/ndd-runtime/pkg/utils"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
 const (
@@ -43,12 +42,21 @@ func (s *srosDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Di
 	if err != nil {
 		return nil, err
 	}
+	capRsp, err := t.Capabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
 	resp, err := t.Get(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	devDetails := &targetv1.DiscoveryInfo{
-		VendorType: ygot.String(ygotnddtarget.NddTarget_VendorType_nokia_sros.String()),
+	di := &targetv1.DiscoveryInfo{
+		VendorType:         targetv1.VendorTypeNokiaSROS,
+		LastSeen:           time.Now().UnixNano(),
+		SupportedEncodings: make([]string, 0, len(capRsp.GetSupportedEncodings())),
+	}
+	for _, enc := range capRsp.GetSupportedEncodings() {
+		di.SupportedEncodings = append(di.SupportedEncodings, enc.String())
 	}
 	for _, notif := range resp.GetNotification() {
 		for _, upd := range notif.GetUpdate() {
@@ -57,25 +65,25 @@ func (s *srosDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Di
 			case srosSWVersionPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				devDetails.SwVersion = utils.StringPtr(val)
+				di.SwVersion = utils.StringPtr(val)
 			case srosChassisPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				devDetails.Kind = utils.StringPtr(val)
+				di.Platform = val
 			case srosSerialNumberPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				devDetails.SerialNumber = utils.StringPtr(val)
+				di.SerialNumber = utils.StringPtr(val)
 			case srosHWMacAddressPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				devDetails.MacAddress = utils.StringPtr(val)
+				di.MacAddress = utils.StringPtr(val)
 			case srosHostnamePath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				devDetails.HostName = utils.StringPtr(val)
+				di.HostName = val
 			}
 		}
 	}
-	return devDetails, nil
+	return di, nil
 }

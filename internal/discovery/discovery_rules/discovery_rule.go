@@ -8,22 +8,18 @@ import (
 
 	"github.com/karimra/gnmic/target"
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/openconfig/ygot/ygot"
 	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	IPRangeDiscoveryRule = "ip-range"
+	IPRangeDiscoveryRule = "ipRange"
 )
 
 type DiscoveryRule interface {
@@ -88,46 +84,38 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 	if namespace == "" {
 		namespace = dr.GetNamespace()
 	}
-	targetName := fmt.Sprintf("%s.%s.%s", *di.HostName, strings.Fields(*di.SerialNumber)[0], *di.MacAddress)
+	targetName := fmt.Sprintf("%s.%s.%s", di.HostName, strings.Fields(*di.SerialNumber)[0], *di.MacAddress)
 	targetName = strings.ReplaceAll(targetName, ":", "-")
 	targetName = strings.ToLower(targetName)
-	nddTarget := &ygotnddtarget.NddTarget_TargetEntry{
-		AdminState: ygotnddtarget.NddCommon_AdminState_enable,
-		Config: &ygotnddtarget.NddTarget_TargetEntry_Config{
-			Address:        &t.Config.Address,
-			CredentialName: pointer.String(dr.Spec.Credentials),
-			Encoding:       ygotnddtarget.NddTarget_Encoding_ASCII,
-			Insecure:       pointer.Bool(dr.Spec.Insecure),
-			Protocol:       ygotnddtarget.NddTarget_Protocol_gnmi,
-			SkipVerify:     pointer.Bool(true),
+	targetSpec := targetv1.TargetSpec{
+		Properties: &targetv1.TargetProperties{
+			VendorType: di.VendorType,
+			Config: &targetv1.TargetConfig{
+				Address:           t.Config.Address,
+				CredentialName:    dr.Spec.Credentials,
+				Encoding:          "",
+				Insecure:          *t.Config.Insecure,
+				Protocol:          targetv1.Protocol(targetv1.Protocol_GNMI),
+				SkipVerify:        *t.Config.SkipVerify,
+				TlsCredentialName: "",
+			},
+			// Allocation: map[string]*targetv1.Allocation{},
 		},
-		Description: pointer.String(fmt.Sprintf("discovered by rule %s", dr.GetName())),
-		Name:        pointer.String(targetName),
-		VendorType:  ygotnddtarget.NddTarget_VendorType_nokia_srl,
-	}
-
-	//
-	j, err := ygot.EmitJSON(nddTarget, &ygot.EmitJSONConfig{
-		Format:         ygot.RFC7951,
-		SkipValidation: true,
-	})
-	if err != nil {
-		return err
 	}
 
 	// check if the target already exists
 	targetCR := &targetv1.Target{}
-	err = c.Get(ctx, types.NamespacedName{
+	err := c.Get(ctx, types.NamespacedName{
 		Namespace: namespace,
 		Name:      targetName,
 	}, targetCR)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			labels, err := dr.GetTargetLabels(nddTarget)
+			labels, err := dr.GetTargetLabels(&targetSpec)
 			if err != nil {
 				return err
 			}
-			anno, err := dr.GetTargetAnnotations(nddTarget)
+			anno, err := dr.GetTargetAnnotations(&targetSpec)
 			if err != nil {
 				return err
 			}
@@ -138,9 +126,7 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 					Labels:      labels,
 					Annotations: anno,
 				},
-				Spec: targetv1.TargetSpec{
-					Properties: runtime.RawExtension{Raw: []byte(j)},
-				},
+				Spec: targetSpec,
 			}
 			err = c.Create(ctx, targetCR)
 			if err != nil {

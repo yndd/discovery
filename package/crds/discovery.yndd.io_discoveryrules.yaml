@@ -1,4 +1,4 @@
----
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -15,7 +15,25 @@ spec:
     singular: discoveryrule
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: True if the discovery rule is enabled
+      jsonPath: .spec.enabled
+      name: ENABLED
+      type: boolean
+    - description: Protocol used discover the target
+      jsonPath: .spec.protocol
+      name: PROTOCOL
+      type: string
+    - description: Wait period between discovery rule runs
+      jsonPath: .spec.period
+      name: PERIOD
+      type: string
+    - description: Secret name where the credentials used to access the target are
+        stored
+      jsonPath: .spec.credentials
+      name: CREDENTIALS
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DiscoveryRule is the Schema for the discoveryrules API
@@ -35,24 +53,24 @@ spec:
           spec:
             description: DiscoveryRuleSpec defines the desired state of DiscoveryRule
             properties:
-              api-rule:
+              apiRule:
                 description: API discovery rule
                 properties:
-                  api-insecure:
-                    type: boolean
-                  check-reachability:
+                  checkReachability:
                     type: boolean
                   headers:
                     additionalProperties:
                       type: string
                     type: object
+                  insecure:
+                    type: boolean
                   method:
                     type: string
                   oauth:
                     description: 'TODO: should become a struct with username/password
                       and/or token'
                     type: string
-                  response-template:
+                  responseTemplate:
                     type: string
                   url:
                     type: string
@@ -61,7 +79,8 @@ spec:
                 description: certificate Name
                 type: string
               credentials:
-                description: credentials used to access the target, a secret name
+                description: secret name where the credentials used to access the
+                  target are stored
                 type: string
               enabled:
                 description: enables the discovery rule
@@ -69,13 +88,18 @@ spec:
               insecure:
                 description: Insecure connection
                 type: boolean
-              ip-range:
+              ipRange:
                 description: IP range discovery rule
                 properties:
                   cidrs:
+                    description: list of CIDR(s) to be scanned
                     items:
                       type: string
                     type: array
+                  concurrentScans:
+                    description: number of concurrent IP scan
+                    format: int64
+                    type: integer
                   excludes:
                     description: IP CIDR(s) to be excluded
                     items:
@@ -93,7 +117,7 @@ spec:
               protocol:
                 description: gNMI, netconf
                 type: string
-              target-template:
+              targetTemplate:
                 description: target template
                 properties:
                   annotations:
@@ -108,26 +132,28 @@ spec:
                     description: Labels is a key value map to be copied to the target
                       CR.
                     type: object
-                  name-template:
+                  nameTemplate:
                     description: target name template
                     type: string
                   namespace:
                     description: target namespace
                     type: string
                 type: object
-              topology-rule:
+              topologyRule:
                 description: Topology discovery rule
                 properties:
-                  topology-namespace:
+                  topologyNamespace:
                     type: string
                 type: object
             type: object
           status:
             description: DiscoveryRuleStatus defines the observed state of DiscoveryRule
             properties:
-              start-time:
+              startTime:
                 format: int64
                 type: integer
+              type:
+                type: string
             type: object
         type: object
     served: true

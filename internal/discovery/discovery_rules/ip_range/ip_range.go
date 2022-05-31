@@ -13,9 +13,14 @@ import (
 	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
 	discoveryrules "github.com/yndd/discovery/internal/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"golang.org/x/sync/semaphore"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	defaultConcurrentScanNumber = 1
 )
 
 func init() {
@@ -35,6 +40,9 @@ func (i *ipRangeDR) Run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule
 	for _, o := range opts {
 		o(i)
 	}
+	if dr.Spec.IPRange.ConcurrentScans <= 0 {
+		dr.Spec.IPRange.ConcurrentScans = defaultConcurrentScanNumber
+	}
 	i.logger = i.logger.WithValues("discovery-rule", fmt.Sprintf("%s/%s", dr.GetNamespace(), dr.GetName()))
 	for {
 		select {
@@ -46,10 +54,12 @@ func (i *ipRangeDR) Run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule
 			if err != nil {
 				i.logger.Info("failed to run discovery rule", "error", err)
 			}
+			i.logger.Debug("discovery rule done, waiting for next run", "name", dr.GetName())
 			time.Sleep(dr.Spec.Period.Duration)
 		}
 	}
 }
+
 func (i *ipRangeDR) Stop() error {
 	i.cfn()
 	return nil
@@ -59,6 +69,7 @@ func (i *ipRangeDR) Stop() error {
 func (i *ipRangeDR) SetLogger(logger logging.Logger) {
 	i.logger = logger
 }
+
 func (i *ipRangeDR) SetClient(c client.Client) {
 	i.client = c
 }
@@ -79,16 +90,24 @@ func (i *ipRangeDR) run(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule
 		}
 	}
 	//
+	sem := semaphore.NewWeighted(dr.Spec.IPRange.ConcurrentScans)
 	for _, ip := range sortIPs(hosts) {
+		err = sem.Acquire(ctx, 1)
+		if err != nil {
+			return err
+		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			err := i.discover(ctx, dr, ip)
-			if err != nil {
-				i.logger.Info("Failed discovery", "IP", ip, "error", err)
-				continue
-			}
+			go func(ip string) {
+				defer sem.Release(1)
+				err := i.discover(ctx, dr, ip)
+				if err != nil {
+					i.logger.Info("Failed discovery", "IP", ip, "error", err)
+					return
+				}
+			}(ip)
 		}
 	}
 	return nil
