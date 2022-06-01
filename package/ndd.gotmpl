@@ -32,7 +32,7 @@ spec:
           name: https
     - container:
         name: controller
-        image: vikar2/discovery-provider-controller:latest
+        image: {{ include "repo" | default "yndd" }}/discovery-provider-controller:latest
       extras:
       - {name: metrics, service: true, port: 8443, target-port: 443}
       - {name: profiler, volume: true}
