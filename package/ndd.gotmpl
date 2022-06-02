@@ -18,6 +18,9 @@ spec:
     - apiGroups: [discovery.yndd.io]
       resources: [discoveryrules]
       verbs: [get, list, watch, update, patch, create, delete]
+    - apiGroups: [topo.yndd.io]
+      resources: [nodes]
+      verbs: [get, list, watch, update]
     containers:
     - container:
         name: kube-rbac-proxy

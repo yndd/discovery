@@ -18,6 +18,9 @@ spec:
     - apiGroups: [discovery.yndd.io]
       resources: [discoveryrules]
       verbs: [get, list, watch, update, patch, create, delete]
+    - apiGroups: [topo.yndd.io]
+      resources: [nodes]
+      verbs: [get, list, watch, update]
     containers:
     - container:
         name: kube-rbac-proxy
@@ -32,7 +35,7 @@ spec:
           name: https
     - container:
         name: controller
-        image: vikar2/discovery-provider-controller:latest
+        image: yndd/discovery-provider-controller:latest
       extras:
       - {name: metrics, service: true, port: 8443, target-port: 443}
       - {name: profiler, volume: true}

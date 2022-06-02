@@ -1,0 +1,9 @@
+apiVersion: topo.yndd.io/v1alpha1
+kind: Node
+metadata:
+  name: node2
+  namespace: ndd-system
+spec:
+  properties:
+    vendorType: nokiaSRL
+    mgmtIPAddress: 172.20.20.16

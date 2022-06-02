@@ -89,7 +89,10 @@ type APIRule struct {
 }
 
 type TopologyRule struct {
-	TopologyNamespace string `json:"topologyNamespace,omitempty"`
+	// topology namespace
+	Namespace string `json:"namespace,omitempty"`
+	// topology name
+	Name string `json:"name,omitempty"`
 }
 
 type TargetTemplate struct {
