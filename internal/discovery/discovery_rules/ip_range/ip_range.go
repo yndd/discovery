@@ -9,13 +9,10 @@ import (
 	"sort"
 	"time"
 
-	gapi "github.com/karimra/gnmic/api"
 	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
 	discoveryrules "github.com/yndd/discovery/internal/discovery/discovery_rules"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"golang.org/x/sync/semaphore"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -144,37 +141,16 @@ func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.Discover
 	case "netconf":
 		return nil
 	default: // gnmi
-		creds := &corev1.Secret{}
-		err := i.client.Get(ctx, types.NamespacedName{
-			Namespace: dr.GetNamespace(),
-			Name:      dr.Spec.Credentials,
-		}, creds)
+		t, err := discoveryrules.CreateTarget(ctx, dr, i.client, ip)
 		if err != nil {
 			return err
 		}
-		tOpts := []gapi.TargetOption{
-			gapi.Address(fmt.Sprintf("%s:%d", ip, dr.Spec.Port)),
-			gapi.Username(string(creds.Data["username"])),
-			gapi.Password(string(creds.Data["password"])),
-			gapi.Timeout(5 * time.Second),
-		}
-		if dr.Spec.Insecure {
-			tOpts = append(tOpts, gapi.Insecure(true))
-		} else {
-			tOpts = append(tOpts, gapi.SkipVerify(true))
-		}
-		// TODO: query certificate, its secret and use it
-
-		t, err := gapi.NewTarget(tOpts...)
-		if err != nil {
-			return err
-		}
-		defer t.Close()
 		i.logger.Info("Creating gNMI client", "IP", t.Config.Name)
 		err = t.CreateGNMIClient(ctx)
 		if err != nil {
 			return err
 		}
+		defer t.Close()
 		capRsp, err := t.Capabilities(ctx)
 		if err != nil {
 			return err
@@ -189,7 +165,7 @@ func (i *ipRangeDR) discover(ctx context.Context, dr *discoveryv1alpha1.Discover
 		}
 		b, _ := json.Marshal(di)
 		i.logger.Info("discovery info", "info", string(b))
-		return discoveryrules.ApplyTarget(ctx, i.client, dr, di, t)
+		return discoveryrules.ApplyTarget(ctx, i.client, dr, di, t, nil)
 	}
 }
 

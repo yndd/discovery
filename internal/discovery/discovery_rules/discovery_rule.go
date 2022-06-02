@@ -5,13 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	gapi "github.com/karimra/gnmic/api"
 	"github.com/karimra/gnmic/target"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	targetv1 "github.com/yndd/target/apis/target/v1"
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -19,7 +22,8 @@ import (
 )
 
 const (
-	IPRangeDiscoveryRule = "ipRange"
+	IPRangeDiscoveryRule   = "ipRange"
+	TopoWatchDiscoveryRule = "topoWatch"
 )
 
 type DiscoveryRule interface {
@@ -76,7 +80,11 @@ OUTER:
 	return discoverer, nil
 }
 
-func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.DiscoveryRule, di *targetv1.DiscoveryInfo, t *target.Target) error {
+func ApplyTarget(ctx context.Context,
+	c client.Client, dr *discoveryv1alpha1.DiscoveryRule,
+	di *targetv1.DiscoveryInfo, t *target.Target,
+	drLabels map[string]string,
+) error {
 	var namespace string
 	if dr.Spec.TargetTemplate != nil {
 		namespace = dr.Spec.TargetTemplate.Namespace
@@ -115,6 +123,11 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 			if err != nil {
 				return err
 			}
+			// merge discovery rule implementation labels
+			for k, v := range drLabels {
+				labels[k] = v
+			}
+
 			anno, err := dr.GetTargetAnnotations(&targetSpec)
 			if err != nil {
 				return err
@@ -146,12 +159,40 @@ func ApplyTarget(ctx context.Context, c client.Client, dr *discoveryv1alpha1.Dis
 }
 
 func Initialize(dr *discoveryv1alpha1.DiscoveryRule) DiscoveryRule {
-	if dr.Spec.IPRange != nil {
-		drInit, ok := DiscoveryRules[IPRangeDiscoveryRule]
-		if !ok {
-			return nil
-		}
-		return drInit()
+	var ruleName string
+	switch {
+	case dr.Spec.IPRange != nil:
+		ruleName = IPRangeDiscoveryRule
+	case dr.Spec.TopologyRule != nil:
+		ruleName = TopoWatchDiscoveryRule
 	}
-	return nil
+	drInit, ok := DiscoveryRules[ruleName]
+	if !ok {
+		return nil
+	}
+	return drInit()
+}
+func CreateTarget(ctx context.Context, dr *discoveryv1alpha1.DiscoveryRule, c client.Client, ip string) (*target.Target, error) {
+	creds := &corev1.Secret{}
+	err := c.Get(ctx, types.NamespacedName{
+		Namespace: dr.GetNamespace(),
+		Name:      dr.Spec.Credentials,
+	}, creds)
+	if err != nil {
+		return nil, err
+	}
+	tOpts := []gapi.TargetOption{
+		gapi.Address(fmt.Sprintf("%s:%d", ip, dr.Spec.Port)),
+		gapi.Username(string(creds.Data["username"])),
+		gapi.Password(string(creds.Data["password"])),
+		gapi.Timeout(5 * time.Second),
+	}
+	if dr.Spec.Insecure {
+		tOpts = append(tOpts, gapi.Insecure(true))
+	} else {
+		tOpts = append(tOpts, gapi.SkipVerify(true))
+	}
+	// TODO: query certificate, its secret and use it
+
+	return gapi.NewTarget(tOpts...)
 }
