@@ -9,7 +9,6 @@ import (
 	gutils "github.com/karimra/gnmic/utils"
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
-	"github.com/yndd/ndd-runtime/pkg/utils"
 	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
@@ -64,13 +63,13 @@ func (s *srlDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Dis
 			p := gutils.GnmiPathToXPath(upd.GetPath(), true)
 			switch p {
 			case srlSwVersionPath:
-				di.SwVersion = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.SwVersion = upd.GetVal().GetStringVal()
 			case srlChassisTypePath:
 				di.Platform = upd.GetVal().GetStringVal()
 			case srlSerialNumberPath:
-				di.SerialNumber = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.SerialNumber = upd.GetVal().GetStringVal()
 			case srlHWMacAddrPath:
-				di.MacAddress = utils.StringPtr(upd.GetVal().GetStringVal())
+				di.MacAddress = upd.GetVal().GetStringVal()
 			case srlHostnamePath:
 				di.HostName = upd.GetVal().GetStringVal()
 			}
