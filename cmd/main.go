@@ -42,6 +42,7 @@ import (
 	discoveryv1alpha1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/controllers"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	topologyv1alpha1 "github.com/yndd/topology/apis/topo/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -54,6 +55,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(targetv1.AddToScheme(scheme))
 	utilruntime.Must(discoveryv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(topologyv1alpha1.AddToScheme(scheme))
+
 	//+kubebuilder:scaffold:scheme
 
 }

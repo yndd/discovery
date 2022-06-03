@@ -1,0 +1,15 @@
+apiVersion: discovery.yndd.io/v1alpha1
+kind: DiscoveryRule
+metadata:
+  name: dr3
+  namespace: ndd-system
+spec:
+  period: 1m
+  enabled: true
+  protocol: gnmi
+  credentials: dr1-credentials
+  targetTemplate:
+    labels:
+      "yndd.io/certificate-profile": "cert-profile-2"
+  topologyRule:
+    namespace: "ndd-system"

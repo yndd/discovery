@@ -142,7 +142,11 @@ spec:
               topologyRule:
                 description: Topology discovery rule
                 properties:
-                  topologyNamespace:
+                  name:
+                    description: topology name
+                    type: string
+                  namespace:
+                    description: topology namespace
                     type: string
                 type: object
             type: object
