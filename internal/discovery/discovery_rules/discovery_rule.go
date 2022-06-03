@@ -92,7 +92,7 @@ func ApplyTarget(ctx context.Context,
 	if namespace == "" {
 		namespace = dr.GetNamespace()
 	}
-	targetName := fmt.Sprintf("%s.%s.%s", di.HostName, strings.Fields(*di.SerialNumber)[0], *di.MacAddress)
+	targetName := fmt.Sprintf("%s.%s.%s", di.HostName, strings.Fields(di.SerialNumber)[0], di.MacAddress)
 	targetName = strings.ReplaceAll(targetName, ":", "-")
 	targetName = strings.ToLower(targetName)
 	targetSpec := targetv1.TargetSpec{

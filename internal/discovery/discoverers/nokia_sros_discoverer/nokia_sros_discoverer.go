@@ -10,7 +10,6 @@ import (
 	gutils "github.com/karimra/gnmic/utils"
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
-	"github.com/yndd/ndd-runtime/pkg/utils"
 	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
@@ -65,7 +64,7 @@ func (s *srosDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Di
 			case srosSWVersionPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				di.SwVersion = utils.StringPtr(val)
+				di.SwVersion = val
 			case srosChassisPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
@@ -73,11 +72,11 @@ func (s *srosDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Di
 			case srosSerialNumberPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				di.SerialNumber = utils.StringPtr(val)
+				di.SerialNumber = val
 			case srosHWMacAddressPath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
-				di.MacAddress = utils.StringPtr(val)
+				di.MacAddress = val
 			case srosHostnamePath:
 				val := string(upd.GetVal().GetJsonVal())
 				val = strings.Trim(val, "\"")
