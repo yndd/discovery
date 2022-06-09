@@ -1992,8 +1992,8 @@ github.com/yeya24/promlinter v0.1.0/go.mod h1:rs5vtZzeBHqqMwXqFScncpCF6u06lezhZe
 github.com/yndd/app-runtime v0.0.5/go.mod h1:M3fnYfiW2+jNcvCrg1fuNIra6sUpLueMteHOJ0S0YNc=
 github.com/yndd/app-runtime v0.0.6 h1:zalytGpzMtDno3kafJtBkQXUeFpvwNy4IZ9xALUoBDY=
 github.com/yndd/app-runtime v0.0.6/go.mod h1:M3fnYfiW2+jNcvCrg1fuNIra6sUpLueMteHOJ0S0YNc=
-github.com/yndd/cache v0.0.5/go.mod h1:hG94StQNZxE5HPXgsQbj1K78HCgoWfCHx7o8z9Z3Jag=
-github.com/yndd/grpcserver v0.0.1/go.mod h1:72LjUJQoX10WJFBmpILFoS+t8H7N7aCA+wMxFeZNTOk=
+github.com/yndd/cache v0.0.8/go.mod h1:hG94StQNZxE5HPXgsQbj1K78HCgoWfCHx7o8z9Z3Jag=
+github.com/yndd/grpcserver v0.0.10/go.mod h1:72LjUJQoX10WJFBmpILFoS+t8H7N7aCA+wMxFeZNTOk=
 github.com/yndd/ndd-core v0.1.6/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
 github.com/yndd/ndd-core v0.1.7/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
 github.com/yndd/ndd-core v0.2.19/go.mod h1:vL11h7D7PDf629XFxhLMa4OROZrq4GbsM6tmk+T93xQ=
@@ -2052,8 +2052,8 @@ github.com/yndd/nddr-topo-registry v0.0.4/go.mod h1:f5/qMkWQa7namvEgYrNZisgvhcee
 github.com/yndd/registrator v0.0.15/go.mod h1:6y85l1HVkcwJNSknGFyx8jBmw4VDgRUaF0Spku6sHiw=
 github.com/yndd/registrator v0.0.19/go.mod h1:6y85l1HVkcwJNSknGFyx8jBmw4VDgRUaF0Spku6sHiw=
 github.com/yndd/target v0.0.53/go.mod h1:4mOG4FYxgBI9v5boKQi+K6VPq46A2G8ScHpFdbZvWQc=
-github.com/yndd/target v0.0.74 h1:o9dFwYfk50Trnu/5SmWz1mxwMRoyQJrEQacmpMrXdXs=
-github.com/yndd/target v0.0.74/go.mod h1:cGMcxvMp5PYbKKXDShRLVqMJ1K6kpTinIQvTDpe0sSY=
+github.com/yndd/target v0.0.99 h1:sKxn5sOyXkjCOeX8rYxe/AD5qQxMCJ6fDHg+ncMPbbg=
+github.com/yndd/target v0.0.99/go.mod h1:EN0PXozTG9I1d4EOX41D6rRR0aSqrCuj4njMzCWFT/E=
 github.com/yndd/topology v0.0.6/go.mod h1:zEReUqOQ1wuKoE5RQYppmptAj1LlSuWwAQMg0iOFoC0=
 github.com/yndd/topology v0.0.7 h1:GHi3//NM2L8wqlFOQyG7TcBCEcxnQ9O2WArW5VbG11I=
 github.com/yndd/topology v0.0.7/go.mod h1:l1j7fa6TfOqV8YzsgDy2WDRTn5p8SHxXb6+qROtBp/o=
