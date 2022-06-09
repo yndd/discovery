@@ -7,7 +7,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/yndd/ndd-runtime v0.5.18
-	github.com/yndd/target v0.0.99
+	github.com/yndd/target v0.0.100
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
 	k8s.io/api v0.24.1
 	k8s.io/apimachinery v0.24.1

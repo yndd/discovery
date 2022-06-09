@@ -2052,8 +2052,8 @@ github.com/yndd/nddr-topo-registry v0.0.4/go.mod h1:f5/qMkWQa7namvEgYrNZisgvhcee
 github.com/yndd/registrator v0.0.15/go.mod h1:6y85l1HVkcwJNSknGFyx8jBmw4VDgRUaF0Spku6sHiw=
 github.com/yndd/registrator v0.0.19/go.mod h1:6y85l1HVkcwJNSknGFyx8jBmw4VDgRUaF0Spku6sHiw=
 github.com/yndd/target v0.0.53/go.mod h1:4mOG4FYxgBI9v5boKQi+K6VPq46A2G8ScHpFdbZvWQc=
-github.com/yndd/target v0.0.99 h1:sKxn5sOyXkjCOeX8rYxe/AD5qQxMCJ6fDHg+ncMPbbg=
-github.com/yndd/target v0.0.99/go.mod h1:EN0PXozTG9I1d4EOX41D6rRR0aSqrCuj4njMzCWFT/E=
+github.com/yndd/target v0.0.100 h1:9Zbw8zP0z/XZ5/8lZbe2rDj37hXFeedEmIPpGSowkCI=
+github.com/yndd/target v0.0.100/go.mod h1:EN0PXozTG9I1d4EOX41D6rRR0aSqrCuj4njMzCWFT/E=
 github.com/yndd/topology v0.0.6/go.mod h1:zEReUqOQ1wuKoE5RQYppmptAj1LlSuWwAQMg0iOFoC0=
 github.com/yndd/topology v0.0.7 h1:GHi3//NM2L8wqlFOQyG7TcBCEcxnQ9O2WArW5VbG11I=
 github.com/yndd/topology v0.0.7/go.mod h1:l1j7fa6TfOqV8YzsgDy2WDRTn5p8SHxXb6+qROtBp/o=

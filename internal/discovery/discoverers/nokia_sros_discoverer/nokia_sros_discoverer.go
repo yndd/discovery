@@ -11,6 +11,7 @@ import (
 	discoveryv1alphav1 "github.com/yndd/discovery/api/v1alpha1"
 	"github.com/yndd/discovery/internal/discovery/discoverers"
 	targetv1 "github.com/yndd/target/apis/target/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -50,8 +51,10 @@ func (s *srosDiscoverer) Discover(ctx context.Context, dr *discoveryv1alphav1.Di
 		return nil, err
 	}
 	di := &targetv1.DiscoveryInfo{
-		VendorType:         targetv1.VendorTypeNokiaSROS,
-		LastSeen:           time.Now().UnixNano(),
+		VendorType: targetv1.VendorTypeNokiaSROS,
+		LastSeen: metav1.Time{
+			Time: time.Now(),
+		},
 		SupportedEncodings: make([]string, 0, len(capRsp.GetSupportedEncodings())),
 	}
 	for _, enc := range capRsp.GetSupportedEncodings() {
