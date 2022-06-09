@@ -109,6 +109,7 @@ func ApplyTarget(ctx context.Context,
 			},
 			// Allocation: map[string]*targetv1.Allocation{},
 		},
+		DiscoveryInfo: di,
 	}
 
 	// check if the target already exists
@@ -150,12 +151,15 @@ func ApplyTarget(ctx context.Context,
 		}
 	}
 	// target already exists
-	targetCR.Status = targetv1.TargetStatus{
-		Status: targetv1.Status{
-			DiscoveryInfo: di,
-		},
-	}
-	return c.Status().Update(ctx, targetCR)
+	/*
+			targetCR.Status = targetv1.TargetStatus{
+				Status: targetv1.Status{
+					DiscoveryInfo: di,
+				},
+			}
+		return c.Status().Update(ctx, targetCR)
+	*/
+	return nil
 }
 
 func Initialize(dr *discoveryv1alpha1.DiscoveryRule) DiscoveryRule {
