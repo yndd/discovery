@@ -142,10 +142,7 @@ func ApplyTarget(ctx context.Context,
 				},
 				Spec: targetSpec,
 			}
-			err = c.Create(ctx, targetCR)
-			if err != nil {
-				return err
-			}
+			return c.Create(ctx, targetCR)
 		} else {
 			return err
 		}
