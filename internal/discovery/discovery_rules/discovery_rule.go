@@ -151,15 +151,8 @@ func ApplyTarget(ctx context.Context,
 		}
 	}
 	// target already exists
-	/*
-			targetCR.Status = targetv1.TargetStatus{
-				Status: targetv1.Status{
-					DiscoveryInfo: di,
-				},
-			}
-		return c.Status().Update(ctx, targetCR)
-	*/
-	return nil
+	targetCR.Spec.DiscoveryInfo = di
+	return c.Update(ctx, targetCR)
 }
 
 func Initialize(dr *discoveryv1alpha1.DiscoveryRule) DiscoveryRule {
